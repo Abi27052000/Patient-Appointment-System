@@ -28,7 +28,12 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <img src={assets.logo} alt="Logo" className="h-8 w-auto" />
+            <img
+              onClick={() => navigate("/")}
+              src={assets.logo}
+              alt="Logo"
+              className="h-8 w-auto"
+            />
           </div>
 
           {/* Navigation Links */}
