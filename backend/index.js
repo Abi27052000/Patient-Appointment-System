@@ -4,6 +4,8 @@ import "dotenv/config";
 import connectDb from "./config/mongodb.js";
 // import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routers/admin_router.js";
+import userRouter from "./routers/user_router.js";
+import doctorRouter from "./routers/doctor_router.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -12,6 +14,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/admin", adminRouter);
+app.use("/api/user", userRouter);
+app.use("/api/doctor", doctorRouter);
 
 connectDb();
 // connectCloudinary();

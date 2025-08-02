@@ -4,6 +4,7 @@ import doctorModel from "../models/doctor_model.js";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 import jwt from "jsonwebtoken";
+import { sendDoctorCredentials } from "../utils/send_doctor_email.js";
 
 // Add a new doctor
 export const addDoctor = async (req, res) => {
@@ -92,6 +93,18 @@ export const addDoctor = async (req, res) => {
 
     await doctor.save();
 
+    // Send email with credentials (optional - don't fail if email fails)
+    try {
+      await sendDoctorCredentials(email, name, password);
+      console.log(`Credentials email sent successfully to ${email}`);
+    } catch (emailError) {
+      console.error(
+        `Failed to send credentials email to ${email}:`,
+        emailError.message
+      );
+      // Continue without failing the doctor creation
+    }
+
     return res
       .status(201)
       .json({ message: "Doctor added successfully", doctor });
@@ -109,11 +122,25 @@ export const adminLogin = (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
     if (email === adminEmail && password === adminPassword) {
-      const token = jwt.sign(email + adminPassword, process.env.JWT_SECRET, {});
-      return res.status(200).json({ message: "Admin login successful", token });
+      const token = jwt.sign(
+        { email: adminEmail, role: "admin" },
+        process.env.JWT_SECRET
+      );
+      return res.status(200).json({
+        message: "Admin login successful",
+        token,
+        admin: {
+          email: adminEmail,
+          role: "admin",
+        },
+      });
     } else {
-      return res.status(403).json({ error: "Unauthorized access" });
+      return res.status(403).json({ error: "Invalid credentials" });
     }
   } catch (error) {
     console.error("Error during admin login:", error);

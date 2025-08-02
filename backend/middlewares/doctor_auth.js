@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 
-const adminAuth = async (req, res, next) => {
+// Doctor Authentication Middleware
+const doctorAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -12,18 +13,18 @@ const adminAuth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "doctor") {
       return res
         .status(403)
-        .json({ error: "Access denied. Admin role required." });
+        .json({ error: "Access denied. Doctor role required." });
     }
 
-    req.adminEmail = decoded.email;
+    // req.userId = decoded.id;
     next();
   } catch (error) {
-    console.error("Admin authentication error:", error);
+    console.error("Doctor authentication error:", error);
     return res.status(401).json({ error: "Invalid token" });
   }
 };
 
-export default adminAuth;
+export default doctorAuth;
