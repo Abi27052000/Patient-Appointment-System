@@ -1,13 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [state, setState] = useState("Sign Up");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState("user");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmitHandler = (event) => {
+  const { login, register } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  // Reset role to user when switching to Sign Up
+  const handleStateChange = (newState) => {
+    setState(newState);
+    if (newState === "Sign Up") {
+      setRole("user");
+    }
+  };
+
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setLoading(true);
+
+    try {
+      if (state === "Sign Up") {
+        // Only users can register, doctors and admins are created differently
+        const result = await register(name, email, password);
+        if (result.success) {
+          toast.success(result.message);
+          navigate("/");
+        } else {
+          toast.error(result.message);
+        }
+      } else {
+        // Login
+        const result = await login(email, password, role);
+        if (result.success) {
+          toast.success(result.message);
+
+          // Navigate based on role
+          switch (role) {
+            case "admin":
+              navigate("/admin-dashboard");
+              break;
+            case "doctor":
+              navigate("/doctor-dashboard");
+              break;
+            default:
+              navigate("/");
+          }
+        } else {
+          toast.error(result.message);
+        }
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,7 +81,26 @@ const Login = () => {
 
         {/* Form Container */}
         <div className="bg-white rounded-xl shadow-md p-8">
-          <form className="space-y-6">
+          <form onSubmit={onSubmitHandler} className="space-y-6">
+            {/* Role Selection - Only show for Login, not Sign Up */}
+            {state === "Login" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Login As
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-600 transition-all duration-300"
+                  required
+                >
+                  <option value="user">Patient</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            )}
+
             {/* Full Name Field (Sign Up only) */}
             {state === "Sign Up" && (
               <div>
@@ -79,9 +152,14 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
               >
-                {state === "Sign Up" ? "Create Account" : "Login"}
+                {loading
+                  ? "Processing..."
+                  : state === "Sign Up"
+                  ? "Create Account"
+                  : "Login"}
               </button>
             </div>
 
@@ -91,7 +169,7 @@ const Login = () => {
                 <p className="text-gray-600">
                   Already have an account?{" "}
                   <span
-                    onClick={() => setState("Login")}
+                    onClick={() => handleStateChange("Login")}
                     className="text-blue-600 font-semibold cursor-pointer hover:text-blue-700 transition-colors duration-300"
                   >
                     Login
@@ -101,7 +179,7 @@ const Login = () => {
                 <p className="text-gray-600">
                   Don't have an account?{" "}
                   <span
-                    onClick={() => setState("Sign Up")}
+                    onClick={() => handleStateChange("Sign Up")}
                     className="text-blue-600 font-semibold cursor-pointer hover:text-blue-700 transition-colors duration-300"
                   >
                     Sign Up

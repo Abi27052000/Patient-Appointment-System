@@ -1,12 +1,13 @@
-import React, { use, useState } from "react";
+import React, { useState, useContext } from "react";
 import { assets } from "../assets/assets";
 import { NavLink, useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [token, setToken] = useState(true);
 
+  const { token, logout } = useContext(AppContext);
   const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
@@ -18,9 +19,9 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    setToken(false);
+    logout();
     setIsProfileMenuOpen(false);
-    navigate("/");
+    navigate("/login");
   };
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
