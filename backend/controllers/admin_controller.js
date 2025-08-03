@@ -64,7 +64,8 @@ export const addDoctor = async (req, res) => {
     });
 
     // Remove local file
-    fs.unlinkSync(req.file.path);
+    // fs.unlinkSync(req.file.path);
+    await fs.promises.unlink(req.file.path);
 
     const salt = await bcrypt.genSalt(10); // Generate a salt
     const hashedPassword = await bcrypt.hash(password, salt); // Hash the password
@@ -107,7 +108,7 @@ export const addDoctor = async (req, res) => {
 
     return res
       .status(201)
-      .json({ message: "Doctor added successfully", doctor });
+      .json({ success: true, message: "Doctor added successfully", doctor });
   } catch (error) {
     console.error("Error adding doctor:", error);
     return res.status(500).json({ error: "Server error" });
@@ -144,6 +145,45 @@ export const adminLogin = (req, res) => {
     }
   } catch (error) {
     console.error("Error during admin login:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Fetch All Doctors
+export const fetchAllDoctors = async (req, res) => {
+  try {
+    const doctors = await doctorModel.find().sort({ date: -1 });
+    return res.status(200).json({ success: true, doctors });
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Change doctor availability
+export const doctorAvailability = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // First find the current value to toggle it
+    const doctor = await doctorModel.findOne({ email });
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    const updatedDoctor = await doctorModel.findOneAndUpdate(
+      { email },
+      { available: !doctor.available },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Doctor availability updated to ${updatedDoctor.available}`,
+      available: updatedDoctor.available,
+    });
+  } catch (error) {
+    console.error("Error checking doctor availability:", error);
     return res.status(500).json({ error: "Server error" });
   }
 };

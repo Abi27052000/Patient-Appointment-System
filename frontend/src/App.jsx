@@ -14,7 +14,7 @@ import Appointment from "./pages/Appointment";
 import MyAppointments from "./pages/MyAppointments";
 
 // Admin Pages
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Doctor Pages
 import DoctorDashboard from "./pages/DoctorDashboard";
@@ -22,9 +22,14 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 // Components
 import Navbar from "./components/Navbar";
 import AdminNavbar from "./components/AdminNavbar";
+import AdminSidebar from "./components/AdminSidebar";
+import AdminLayout from "./components/AdminLayout";
 import DoctorNavbar from "./components/DoctorNavbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AllAppointments from "./pages/admin/AllAppointments";
+import AddDoctor from "./pages/admin/AddDoctor";
+import DoctorsList from "./pages/admin/DoctorsList";
 
 function App() {
   const { userRole, token } = useContext(AppContext);
@@ -32,14 +37,13 @@ function App() {
 
   // Function to render the appropriate navbar based on user role
   const renderNavbar = () => {
-    // Don't show navbar on login page
-    if (location.pathname === "/login") return null;
+    // Don't show navbar on login page or admin pages (AdminLayout handles it)
+    if (location.pathname === "/login" || (userRole === "admin" && token))
+      return null;
 
     if (!token) return <Navbar />;
 
     switch (userRole) {
-      case "admin":
-        return <AdminNavbar />;
       case "doctor":
         return <DoctorNavbar />;
       default:
@@ -125,7 +129,39 @@ function App() {
           path="/admin-dashboard"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/all-appointments"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AllAppointments />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/add-doctor"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AddDoctor />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctors-list"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <DoctorsList />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
